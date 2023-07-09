@@ -1,0 +1,64 @@
+//UART RECEIVER TESTBENCH
+`timescale 1ns/1ps
+module uart_receiver_tb;
+ reg clk;
+ reg reset;
+ reg rx;
+ wire enable;
+ wire [7:0] data;
+ wire rx_valid;
+ // Instantiate the UART receiver module
+ uart_receiver uart_inst (
+ .clk(clk),
+ .reset(reset),
+ .rx(rx),
+ .enable(enable),
+ .data(data),
+ .rx_valid(rx_valid)
+ );
+ // Clock generation
+ always #5 clk = ~clk;
+ // Testbench stimuli
+ initial begin
+ clk = 0;
+ reset = 1;
+ rx = 1;
+ #10 reset = 0;
+ // Wait for a few cycles for initialization
+ #20;
+ // Test 1: Receive byte 0x37
+ $display("Test 1: Receive byte 0x37");
+ rx = 0; // Start bit
+ #10;
+ rx = 1; // Data bits: 00110111 (LSB first)
+ #80;
+ rx = 0; // Stop bit
+ #10;
+ rx = 1; // Idle state
+ // Wait for reception to complete
+ #100;
+ // Verify the received data
+ if (enable && rx_valid && data === 8'h37)
+ $display("Test 1: PASSED - Correct byte received");
+ else
+ $display("Test 1: FAILED - Incorrect byte received");
+ // Test 2: Receive byte 0xAA
+ $display("Test 2: Receive byte 0xAA");
+ rx = 0; // Start bit
+ #10;
+ rx = 0; // Data bits: 10101010 (LSB first)
+ #80;
+ rx = 0; // Stop bit
+ #10;
+ rx = 1; // Idle state
+ // Wait for reception to complete
+ #100;
+ // Verify the received data
+ if (enable && rx_valid && data === 8'hAA)
+ $display("Test 2: PASSED - Correct byte received");
+ else
+ $display("Test 2: FAILED - Incorrect byte received");
+ // End the simulation
+ $finish;
+ end
+endmodule

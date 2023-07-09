@@ -1,0 +1,52 @@
+// UART Transmitter code
+module uart_transmitter (
+ input clk, // System clock
+ input reset, // Reset signal
+ input enable, // Enable signal
+ input [7:0] data, // Data input
+ output reg tx, // Transmitter output
+ output reg tx_busy // Transmitter busy flag
+);
+ reg [3:0] bit_count;
+ reg [10:0] shift_reg;
+ reg start_bit;
+ reg stop_bit;
+ always @(posedge clk or posedge reset) begin
+ if (reset) begin
+ tx <= 1'b1; // Idle state
+ tx_busy <= 1'b0;
+ bit_count <= 4'b0;
+ shift_reg <= 11'b0;
+ start_bit <= 1'b0;
+ stop_bit <= 1'b0;
+ end
+ else if (enable) begin
+ if (bit_count == 4'd0) begin
+ // Start bit
+ tx <= 1'b0;
+ start_bit <= 1'b1;
+ bit_count <= bit_count + 1;
+ end
+ else if (bit_count >= 4'd1 && bit_count <= 4'd8) begin
+ // Data bits
+ tx <= shift_reg[0];
+ shift_reg <= {shift_reg[9:0], data};
+ bit_count <= bit_count + 1;
+ end
+ else if (bit_count == 4'd9) begin
+ // Stop bit
+ tx <= 1'b1;
+ stop_bit <= 1'b1;
+ bit_count <= bit_count + 1;
+ end
+ else if (bit_count == 4'd10) begin
+ // End of transmission
+ tx_busy <= 1'b0;
+ bit_count <= 4'd0;
+ end
+ end
+ else begin
+ tx_busy <= 1'b0;
+ end
+ end
+endmodule

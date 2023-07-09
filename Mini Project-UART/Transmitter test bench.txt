@@ -1,0 +1,42 @@
+// Testbench for UART Transmitter
+module uart_transmitter_tb;
+ // Inputs
+ reg clk;
+ reg reset;
+ reg enable;
+ reg [7:0] data;
+ // Outputs
+ wire tx;
+ wire tx_busy;
+ // Instantiate the UART Transmitter
+ uart_transmitter dut (
+ .clk(clk),
+ .reset(reset),
+ .enable(enable),
+ .data(data),
+ .tx(tx),
+ .tx_busy(tx_busy)
+ );
+ // Clock generation
+ always begin
+ #5 clk = ~clk;
+ end
+ // Testcase
+ initial begin
+ // Initialize inputs
+ clk = 0;
+ reset = 1;
+ enable = 0;
+ data = 8'b01010101;
+ // Reset
+ #10 reset = 0;
+ // Transmit data
+ #10 enable = 1;
+ #50 enable = 0;
+ // Wait for transmission completion
+ #100;
+ // End simulation
+ #10 $finish;
+ end
+endmodule
+
